@@ -1,0 +1,105 @@
+<!-- simple bluetooth application to test filters -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>bluetooth filter device demo</title>
+    </head>
+    <body>
+    <div id="output">
+    </div>
+    <div id="ConnectAndNotify">
+      connect and notify
+    </div>
+    <div id="connectNameBtn">
+      connect with Device Name
+    </div>
+    <input type="text" id="custom_name"></input>
+    <div id="connectNameAndUUIDBtn">
+      connect with Device Name or service UUID
+    </div>
+    <script>
+      let device_, server_, batt_chatacterisic_;
+      let mainBtn = document.getElementById('ConnectAndNotify');
+    //   let connectNameBtn = document.getElementById('connectNameBtn');
+    //   let connectNameAndUUIDBtn = document.getElementById('connectNameAndUUIDBtn');
+    //   let custom_name_input = document.getElementById('custom_name');
+
+    function handleCharacteristicValueChanged(event) {
+        var enc = new TextDecoder("utf-8");
+        var value = event.target.value;
+        console.log('Received ' + enc.decode(value))
+    }
+
+    const handleEvent = (event) => {
+        console.log(event);
+    };
+
+    async function tryCode(device){
+        try {
+            await device.gatt.connect();
+            const commandService = await device.gatt.getPrimaryService(0xabcd);
+            const commandCharacteristic = await commandService.getCharacteristic(0xAB41);
+            await commandCharacteristic.startNotifications();
+            await commandCharacteristic.addEventListener('characteristicvaluechanged', handleEvent);   
+        } catch (e) {
+            throw Error(e);
+        }
+    }
+
+
+    function getFilteredDevices(filters) {
+      console.log('nav bluetooth', navigator.bluetooth.requestDevice)
+      navigator.bluetooth.requestDevice({
+      filters: filters
+    }).then(device => {
+    //   device_ = device;
+    //   device_.gatt.connect().then(server => {
+    //     server_ = server;
+    //     console.log(server);
+    //     server_.getPrimaryService(0xabcd).then(service => {
+    //       console.log('got service', service);
+    //       service.getCharacteristic(0xAB41).then(characteristic => {
+    //         batt_chatacterisic_ = characteristic;
+    //         characteristic.startNotifications().then(char => {
+    //             char.addEventListener('characteristicvaluechanged', handleCharacteristicValueChanged.bind(this));
+    //         });
+
+    //     })
+    //   })
+    // })
+        
+    //     console.log(device)
+        tryCode(device);
+      }).catch(error => {
+        console.log("error getting device", error);
+      });
+    }
+    
+    mainBtn.addEventListener('click', async () => {
+      let filters = [{
+        services: [0xabcd],
+      }]
+      getFilteredDevices(filters);
+    })
+    
+    // connectNameBtn.addEventListener('click', async () => {
+    //   console.log(custom_name_input.value);
+    //   let name = custom_name_input.value ? custom_name_input.value : "PLAYBULB Deneb";
+    //   let filters = [{
+    //     name: [name],
+    //   }]
+    //   getFilteredDevices(filters);
+    // })
+    
+    // connectNameAndUUIDBtn.addEventListener('click', async () => {
+    //   let filters = [{
+    //     name: ['PLAYBULB Mimosa'],
+    //   },{
+    //     services: [parseInt('0xFF02')],
+    //   }]
+    //   getFilteredDevices(filters);
+    // })
+    
+    </script>
+    
+    
+    </body></html>
+    
